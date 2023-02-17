@@ -15,12 +15,12 @@ import com.revrobotics.SparkMaxPIDController.ArbFFUnits;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.ArmConstants;
+import frc.robot.Constants.LoArmConstants;
 
 /**
  * Subsystem for wrist mechanism
  */
-public class ArmSubsystem extends SubsystemBase {
+public class LoArmSubsystem extends SubsystemBase {
 
   private static final int SMART_MOTION_SLOT = 0;
   private static final double GRAVITY_FF = 0.01;
@@ -29,27 +29,27 @@ public class ArmSubsystem extends SubsystemBase {
 
   // limits in degrees rotation
   private static final float LIMIT_BOTTOM = -50.0f;
-  private static final float LIMIT_TOP = 100.0f;
+  private static final float LIMIT_TOP = 95.0f;
 
-  private final CANSparkMax armMotor;
-  private final SparkMaxPIDController pidController;
-  private final RelativeEncoder armEncoder;
+  private final CANSparkMax LoarmMotor;
+  private final SparkMaxPIDController LopidController;
+  private final RelativeEncoder LoarmEncoder;
 
-  private Double targetPosition = null;
+  private Double LotargetPosition = null;
 
-  public ArmSubsystem() {
-    armMotor = new CANSparkMax(ArmConstants.ARM_MOTOR_CANID, MotorType.kBrushless);
-    armMotor.restoreFactoryDefaults();
+  public LoArmSubsystem() {
+    LoarmMotor = new CANSparkMax(LoArmConstants.LOARM_MOTOR_CANID, MotorType.kBrushless);
+    LoarmMotor.restoreFactoryDefaults();
     
     // Get the motor relative encoder
-    armEncoder = armMotor.getEncoder();
-    armEncoder.setPositionConversionFactor(360/CHAIN_RAIO/GEARBOX_RATIO);
-    armEncoder.setVelocityConversionFactor(1);
-    armEncoder.setPosition(0);
-    pidController = armMotor.getPIDController();
-    pidController.setFeedbackDevice(armEncoder);
+    LoarmEncoder = LoarmMotor.getEncoder();
+    LoarmEncoder.setPositionConversionFactor(360/CHAIN_RAIO/GEARBOX_RATIO);
+    LoarmEncoder.setVelocityConversionFactor(1);
+    LoarmEncoder.setPosition(0);
+    LopidController = LoarmMotor.getPIDController();
+    LopidController.setFeedbackDevice(LoarmEncoder);
 
-    // Configure closed-loop control
+    // Configure closed-loop control - FIX ME!!!
     double kP = 0.0032075*60;  // .0025; 
     double kI = 0.0;
     double kD = 0.00028705*60; 
@@ -64,54 +64,54 @@ public class ArmSubsystem extends SubsystemBase {
     double maxAcc = 1000;
     double minVel = 0;
 
-    pidController.setP(kP);
-    pidController.setI(kI);
-    pidController.setD(kD);
-    pidController.setIZone(kIz);
-    pidController.setFF(kFF);
-    pidController.setOutputRange(kMinOutput, kMaxOutput); 
+    LopidController.setP(kP);
+    LopidController.setI(kI);
+    LopidController.setD(kD);
+    LopidController.setIZone(kIz);
+    LopidController.setFF(kFF);
+    LopidController.setOutputRange(kMinOutput, kMaxOutput); 
 
-    pidController.setSmartMotionMaxVelocity(maxVel, SMART_MOTION_SLOT);
-    pidController.setSmartMotionMinOutputVelocity(minVel, SMART_MOTION_SLOT);
-    pidController.setSmartMotionMaxAccel(maxAcc, SMART_MOTION_SLOT);
-    pidController.setSmartMotionAllowedClosedLoopError(allowedErr, SMART_MOTION_SLOT);
+    LopidController.setSmartMotionMaxVelocity(maxVel, SMART_MOTION_SLOT);
+    LopidController.setSmartMotionMinOutputVelocity(minVel, SMART_MOTION_SLOT);
+    LopidController.setSmartMotionMaxAccel(maxAcc, SMART_MOTION_SLOT);
+    LopidController.setSmartMotionAllowedClosedLoopError(allowedErr, SMART_MOTION_SLOT);
 
     // Voltage compensation and current limits
-    armMotor.enableVoltageCompensation(12);
-    armMotor.setSmartCurrentLimit(20);
+    LoarmMotor.enableVoltageCompensation(12);
+    LoarmMotor.setSmartCurrentLimit(20);
  
     // Configure soft limits
-    armMotor.setSoftLimit(kForward, LIMIT_TOP);
-    armMotor.setSoftLimit(kReverse, LIMIT_BOTTOM);
-    armMotor.enableSoftLimit(kForward, true);
-    armMotor.enableSoftLimit(kReverse, true);
+    LoarmMotor.setSoftLimit(kForward, LIMIT_TOP);
+    LoarmMotor.setSoftLimit(kReverse, LIMIT_BOTTOM);
+    LoarmMotor.enableSoftLimit(kForward, true);
+    LoarmMotor.enableSoftLimit(kReverse, true);
 
     // Disable limit switches, we don't have any
-    armMotor.getForwardLimitSwitch(kNormallyOpen).enableLimitSwitch(false);
-    armMotor.getReverseLimitSwitch(kNormallyOpen).enableLimitSwitch(false);
+    LoarmMotor.getForwardLimitSwitch(kNormallyOpen).enableLimitSwitch(false);
+    LoarmMotor.getReverseLimitSwitch(kNormallyOpen).enableLimitSwitch(false);
     
     // Brake mode helps hold arm in place - but not for closed loop
-    armMotor.setIdleMode(IdleMode.kCoast);
+    LoarmMotor.setIdleMode(IdleMode.kCoast);
  
     // Save settings to motor flash, so they persist between power cycles
-    armMotor.burnFlash();
+    LoarmMotor.burnFlash();
     
   }
 
   @Override
   public void periodic() {
-    if (targetPosition != null) {
+    if (LotargetPosition != null) {
       // Calculate feed forward based on angle to counteract gravity
       //   double cosineScalar = Math.cos(getArmPosition());
       //   double feedForward = GRAVITY_FF * cosineScalar;
-        SmartDashboard.putNumber("Arm Setpoint",targetPosition);
-      pidController.setReference(targetPosition, 
+        SmartDashboard.putNumber("LoArm Setpoint",LotargetPosition);
+      LopidController.setReference(LotargetPosition, 
           ControlType.kPosition ); // feedForward, ArbFFUnits.kPercentOut);
     }
 
     // SmartDashboard.putNumber("Arm Setpoint",targetPosition);
-    SmartDashboard.putNumber("Arm Position Raw", armEncoder.getPosition());
-    SmartDashboard.putNumber("Arm Output", armMotor.getAppliedOutput());
+    SmartDashboard.putNumber("LoArm Position Raw", LoarmEncoder.getPosition());
+    SmartDashboard.putNumber("LoArm Output", LoarmMotor.getAppliedOutput());
   }
 
   /**
@@ -120,8 +120,8 @@ public class ArmSubsystem extends SubsystemBase {
    * @param speed duty cycle [-1,1]
    */
   public void moveArm(double speed){
-    targetPosition =  null;
-    armMotor.set(speed);
+    LotargetPosition =  null;
+    LoarmMotor.set(speed);
   }
 
   /**
@@ -131,7 +131,7 @@ public class ArmSubsystem extends SubsystemBase {
    */
   public void moveToPosition(double degrees) {
     // Set the target position, but move in execute() so feed forward keeps updating
-    targetPosition = degrees;
+    LotargetPosition = degrees;
   }
 
   /**
@@ -139,7 +139,7 @@ public class ArmSubsystem extends SubsystemBase {
    * @return position in degrees
    */
   public double getArmPosition() {
-    return (armEncoder.getPosition());
+    return (LoarmEncoder.getPosition());
   }
 
   /**
@@ -147,8 +147,8 @@ public class ArmSubsystem extends SubsystemBase {
    */
   public void stop() {
     // targetPosition = null;
-    armMotor.stopMotor();
-    targetPosition = armEncoder.getPosition();
+    LoarmMotor.stopMotor();
+    LotargetPosition = LoarmEncoder.getPosition();
   }
 
 }

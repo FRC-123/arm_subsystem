@@ -16,9 +16,10 @@ import static edu.wpi.first.wpilibj2.command.Commands.startEnd;
 import static frc.robot.Constants.TeleopDriveConstants.DEADBAND;
 
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.DefaultArmCommand;
-import frc.robot.subsystems.ArmSubsystem;
-
+import frc.robot.commands.DefaultHiArmCommand;
+import frc.robot.subsystems.HiArmSubsystem;
+import frc.robot.commands.DefaultLoArmCommand;
+import frc.robot.subsystems.LoArmSubsystem;
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -31,14 +32,18 @@ public class RobotContainer {
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
 
-  private final ArmSubsystem armSubsystem = new ArmSubsystem();
-  private final DefaultArmCommand defaultArmCommand = new DefaultArmCommand(armSubsystem);
+  private final HiArmSubsystem armSubsystem = new HiArmSubsystem();
+  private final DefaultHiArmCommand defaultArmCommand = new DefaultHiArmCommand(armSubsystem);
+
+  private final LoArmSubsystem LoarmSubsystem = new LoArmSubsystem();
+  private final DefaultLoArmCommand defaultLoArmCommand = new DefaultLoArmCommand(LoarmSubsystem);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Configure the trigger bindings
     configureButtonBindings();
     armSubsystem.setDefaultCommand(defaultArmCommand);
+    LoarmSubsystem.setDefaultCommand(defaultLoArmCommand);
   }
 
  /**
@@ -53,7 +58,12 @@ public class RobotContainer {
       startEnd(() -> armSubsystem.moveArm(0.3), armSubsystem::stop, armSubsystem));
     controller.a().whileTrue(
       startEnd(() -> armSubsystem.moveArm( -0.3), armSubsystem::stop, armSubsystem));
-  
+
+    controller.y().whileTrue(
+      startEnd(() -> LoarmSubsystem.moveArm(0.3), LoarmSubsystem::stop, LoarmSubsystem));
+    controller.b().whileTrue(
+      startEnd(() -> LoarmSubsystem.moveArm( -0.3), LoarmSubsystem::stop, LoarmSubsystem));
+      
     controller.start().whileTrue(
       startEnd(() -> armSubsystem.moveToPosition(90), armSubsystem::stop, armSubsystem));
     controller.back().whileTrue(
