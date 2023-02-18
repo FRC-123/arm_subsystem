@@ -23,5 +23,6 @@ public class DefaultLoArmCommand extends CommandBase {
   @Override
   public void end(boolean interrupted) {
     LoarmSubsystem.stop();
+    LoarmSubsystem.stopRollers();
   }
 }

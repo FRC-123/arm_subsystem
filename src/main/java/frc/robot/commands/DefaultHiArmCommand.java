@@ -23,5 +23,6 @@ public class DefaultHiArmCommand extends CommandBase {
   @Override
   public void end(boolean interrupted) {
     HiarmSubsystem.stop();
+    HiarmSubsystem.stopRollers();
   }
 }

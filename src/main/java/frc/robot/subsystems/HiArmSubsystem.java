@@ -35,9 +35,26 @@ public class HiArmSubsystem extends SubsystemBase {
   private final SparkMaxPIDController HipidController;
   private final RelativeEncoder HiarmEncoder;
 
+  private final CANSparkMax HiRollerMotor;
+
+  private final static double CUBE_INTAKE_SPEED = 0.3;
+  private final static double CUBE_EXPELL_SPEED = -0.3;
+  private final static double CONE_INTAKE_SPEED = -0.3;
+  private final static double CONE_EXPELL_SPEED = 0.3;
+
   private Double HitargetPosition = null;
 
   public HiArmSubsystem() {
+
+    HiRollerMotor = new CANSparkMax(HiArmConstants.HIROLLER_MOTOR_CANID, MotorType.kBrushless);
+    HiRollerMotor.restoreFactoryDefaults();
+    // Voltage compensation and current limits
+    HiRollerMotor.enableVoltageCompensation(12);
+    HiRollerMotor.setSmartCurrentLimit(20);
+    HiRollerMotor.setIdleMode(IdleMode.kBrake);
+    HiRollerMotor.burnFlash();
+
+
     HiarmMotor = new CANSparkMax(HiArmConstants.HIARM_MOTOR_CANID, MotorType.kBrushless);
     HiarmMotor.restoreFactoryDefaults();
     
@@ -122,6 +139,54 @@ public class HiArmSubsystem extends SubsystemBase {
   public void moveArm(double speed){
     HitargetPosition =  null;
     HiarmMotor.set(speed);
+  }
+
+  /**
+   * Moves the rollers using duty cycle. There is no motor safety, so calling this will continue to move until another
+   * method is called.
+   * @param speed duty cycle [-1,1]
+   */
+  public void moveRollers(double speed){
+    HiRollerMotor.set(speed);
+  }
+
+  /**
+   * Stop the rollers
+   */
+  public void stopRollers() {
+    HiRollerMotor.stopMotor();
+  }
+
+  /**
+   * intake cube
+   * 
+   */
+  public void intakeCube() {
+    HiRollerMotor.set(CUBE_INTAKE_SPEED);
+  }
+
+    /**
+   * expell cube
+   * 
+   */
+  public void expellCube() {
+    HiRollerMotor.set(CUBE_EXPELL_SPEED);
+  }
+
+    /**
+   * intake cube
+   * 
+   */
+  public void intakeCone() {
+    HiRollerMotor.set(CONE_INTAKE_SPEED);
+  }
+
+    /**
+   * intake cube
+   * 
+   */
+  public void expellCone() {
+    HiRollerMotor.set(CONE_EXPELL_SPEED);
   }
 
   /**

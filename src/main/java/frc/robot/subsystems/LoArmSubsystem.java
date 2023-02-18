@@ -31,13 +31,28 @@ public class LoArmSubsystem extends SubsystemBase {
   private static final float LIMIT_BOTTOM = -50.0f;
   private static final float LIMIT_TOP = 95.0f;
 
+  private final static double OBJ_INTAKE_SPEED = 0.3;
+  private final static double OBJ_EXPELL_SPEED = -0.3;
+
   private final CANSparkMax LoarmMotor;
   private final SparkMaxPIDController LopidController;
   private final RelativeEncoder LoarmEncoder;
 
+  private final CANSparkMax LoRollerMotor;
+
   private Double LotargetPosition = null;
 
   public LoArmSubsystem() {
+
+    LoRollerMotor = new CANSparkMax(LoArmConstants.LOROLLER_MOTOR_CANID, MotorType.kBrushed);
+
+    LoRollerMotor.restoreFactoryDefaults();
+    // Voltage compensation and current limits
+    LoRollerMotor.enableVoltageCompensation(12);
+    LoRollerMotor.setSmartCurrentLimit(20);
+    LoRollerMotor.setIdleMode(IdleMode.kBrake);
+    LoRollerMotor.burnFlash();
+
     LoarmMotor = new CANSparkMax(LoArmConstants.LOARM_MOTOR_CANID, MotorType.kBrushless);
     LoarmMotor.restoreFactoryDefaults();
     
@@ -112,6 +127,38 @@ public class LoArmSubsystem extends SubsystemBase {
     // SmartDashboard.putNumber("Arm Setpoint",targetPosition);
     SmartDashboard.putNumber("LoArm Position Raw", LoarmEncoder.getPosition());
     SmartDashboard.putNumber("LoArm Output", LoarmMotor.getAppliedOutput());
+  }
+
+/**
+   * Moves the rollers using duty cycle. There is no motor safety, so calling this will continue to move until another
+   * method is called.
+   * @param speed duty cycle [-1,1]
+   */
+  public void moveRollers(double speed){
+    LoRollerMotor.set(speed);
+  }
+
+  /**
+   * Stop the rollers
+   */
+  public void stopRollers() {
+    LoRollerMotor.stopMotor();
+  }
+
+  /**
+   * intake cube
+   * 
+   */
+  public void intakeObj() {
+    LoRollerMotor.set(OBJ_INTAKE_SPEED);
+  }
+
+    /**
+   * expell cube
+   * 
+   */
+  public void expellObj() {
+    LoRollerMotor.set(OBJ_EXPELL_SPEED);
   }
 
   /**
